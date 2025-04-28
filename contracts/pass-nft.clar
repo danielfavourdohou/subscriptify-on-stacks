@@ -1,7 +1,12 @@
 ;; pass-nft.clar
 ;; Implements SIP-009 NFT standard for subscription passes
 
-(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
+;; Use NFT trait from mock-traits
+(use-trait nft-trait .mock-traits.nft-trait)
+
+;; Implement NFT trait and pass-nft-trait
+(impl-trait .mock-traits.nft-trait)
+(impl-trait .mock-traits.pass-nft-trait)
 
 (define-constant CONTRACT_OWNER tx-sender)
 (define-constant ERR_NOT_AUTHORIZED (err u300))
@@ -28,11 +33,11 @@
 
 ;; Get the last token ID
 (define-read-only (get-last-token-id)
-  (var-get last-token-id))
+  (ok (var-get last-token-id)))
 
 ;; Get token URI (SIP-009)
 (define-read-only (get-token-uri (token-id uint))
-  (ok (some (concat "https://subscriptify.io/metadata/" (uint-to-ascii token-id)))))
+  (ok (some "https://subscriptify.io/metadata/")))
 
 ;; Get total supply of tokens (SIP-009)
 (define-read-only (get-total-supply)
@@ -50,13 +55,13 @@
           (subscription-key {subscriber: subscriber, plan-id: plan-id}))
       ;; Check if user already has a pass for this plan
       (asserts! (is-none (map-get? subscription-to-token subscription-key)) ERR_ALREADY_MINTED)
-      
+
       ;; Update state
       (var-set last-token-id token-id)
       (map-set token-owners token-id subscriber)
       (map-set token-metadata token-id {plan-id: plan-id, expiry: expiry})
       (map-set subscription-to-token subscription-key token-id)
-      
+
       (ok token-id))))
 
 ;; Burn a subscription pass NFT
@@ -65,15 +70,16 @@
     (asserts! (is-contract-owner-or-subscription-manager) ERR_NOT_AUTHORIZED)
     (let ((subscription-key {subscriber: subscriber, plan-id: plan-id})
           (token-id (unwrap! (map-get? subscription-to-token subscription-key) ERR_NOT_FOUND)))
-      
+
       ;; Verify ownership
-      (asserts! (is-eq (unwrap! (map-get? token-owners token-id) none) subscriber) ERR_WRONG_OWNER)
-      
+      (let ((owner (map-get? token-owners token-id)))
+        (asserts! (and (is-some owner) (is-eq (unwrap-panic owner) subscriber)) ERR_WRONG_OWNER))
+
       ;; Update state
       (map-delete token-owners token-id)
       (map-delete token-metadata token-id)
       (map-delete subscription-to-token subscription-key)
-      
+
       (ok token-id))))
 
 ;; Update expiry date of an existing NFT
@@ -82,12 +88,12 @@
     (asserts! (is-contract-owner-or-subscription-manager) ERR_NOT_AUTHORIZED)
     (let ((subscription-key {subscriber: subscriber, plan-id: plan-id})
           (token-id (unwrap! (map-get? subscription-to-token subscription-key) ERR_NOT_FOUND)))
-      
+
       ;; Update metadata
-      (map-set token-metadata token-id 
+      (map-set token-metadata token-id
         (merge (unwrap! (map-get? token-metadata token-id) (err u304))
                {expiry: new-expiry}))
-      
+
       (ok token-id))))
 
 ;; Get token metadata

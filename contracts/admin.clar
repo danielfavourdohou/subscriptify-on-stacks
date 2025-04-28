@@ -1,6 +1,12 @@
 ;; admin.clar
 ;; Handles administrative functions for the subscription platform
 
+;; Use SIP-010 trait from mock-traits
+(use-trait sip010-trait .mock-traits.sip010-trait)
+
+;; Implement admin-trait
+(impl-trait .mock-traits.admin-trait)
+
 (define-constant CONTRACT_OWNER tx-sender)
 (define-constant ERR_NOT_AUTHORIZED (err u100))
 (define-constant ERR_ALREADY_PAUSED (err u101))
@@ -37,7 +43,7 @@
 
 ;; Check if platform is active
 (define-read-only (is-platform-active)
-  (not (var-get platform-paused)))
+  (ok (not (var-get platform-paused))))
 
 ;; Update admin fee (in basis points)
 (define-public (set-admin-fee-bps (new-fee-bps uint))
@@ -59,11 +65,11 @@
 
 ;; Get current fee collection address
 (define-read-only (get-fee-address)
-  (var-get fee-address))
+  (ok (var-get fee-address)))
 
 ;; Calculate admin fee amount from a total payment
 (define-read-only (calculate-admin-fee (payment-amount uint))
-  (/ (* payment-amount (var-get admin-fee-bps)) u10000))
+  (ok (/ (* payment-amount (var-get admin-fee-bps)) u10000)))
 
 ;; Withdraw available STX fees to the fee address
 (define-public (withdraw-stx-fees (amount uint))
@@ -73,13 +79,13 @@
     (as-contract (stx-transfer? amount tx-sender (var-get fee-address)))))
 
 ;; Emergency function to recover any SIP-010 tokens sent to this contract
-(define-public (recover-tokens (token-contract principal) (amount uint))
+(define-public (recover-tokens (token-contract <sip010-trait>) (amount uint))
   (begin
     (asserts! (is-contract-owner) ERR_NOT_AUTHORIZED)
     (asserts! (> amount u0) ERR_ZERO_AMOUNT)
-    (as-contract 
-      (contract-call? token-contract transfer 
-        amount 
-        tx-sender 
-        (var-get fee-address) 
+    (as-contract
+      (contract-call? token-contract transfer
+        amount
+        tx-sender
+        (var-get fee-address)
         none))))

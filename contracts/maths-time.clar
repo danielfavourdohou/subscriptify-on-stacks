@@ -33,14 +33,14 @@
 
 ;; Get number of blocks remaining until a specific block height
 (define-read-only (blocks-until (target-height uint))
-  (if (> target-height block-height)
-      (- target-height block-height)
+  (if (> target-height burn-block-height)
+      (- target-height burn-block-height)
       u0))
 
 ;; Get expiry block height for a given period in blocks
 (define-read-only (calculate-expiry (period-blocks uint))
-  (+ block-height period-blocks))
+  (+ burn-block-height period-blocks))
 
 ;; Check if a given expiry is valid (in the future)
 (define-read-only (is-expiry-valid (expiry uint))
-  (> expiry block
+  (> expiry burn-block-height))

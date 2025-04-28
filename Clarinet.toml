@@ -5,13 +5,8 @@ authors = []
 telemetry = true
 cache_dir = './.cache'
 requirements = []
-[contracts.access-control]
-path = 'contracts/access-control.clar'
-clarity_version = 3
-epoch = 3.1
-
-[contracts.admin]
-path = 'contracts/admin.clar'
+[contracts.mock-traits]
+path = 'contracts/mock-traits.clar'
 clarity_version = 3
 epoch = 3.1
 
@@ -20,8 +15,13 @@ path = 'contracts/maths-time.clar'
 clarity_version = 3
 epoch = 3.1
 
-[contracts.pass-nft]
-path = 'contracts/pass-nft.clar'
+[contracts.token-payment]
+path = 'contracts/token-payment.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.admin]
+path = 'contracts/admin.clar'
 clarity_version = 3
 epoch = 3.1
 
@@ -30,13 +30,18 @@ path = 'contracts/plan-manager.clar'
 clarity_version = 3
 epoch = 3.1
 
+[contracts.pass-nft]
+path = 'contracts/pass-nft.clar'
+clarity_version = 3
+epoch = 3.1
+
 [contracts.subscription-manager]
 path = 'contracts/subscription-manager.clar'
 clarity_version = 3
 epoch = 3.1
 
-[contracts.token-payment]
-path = 'contracts/token-payment.clar'
+[contracts.access-control]
+path = 'contracts/access-control.clar'
 clarity_version = 3
 epoch = 3.1
 [repl.analysis]
